@@ -62,65 +62,8 @@ typedef struct {
 /* --- 实例化硬件字典 --- */
 // const优化 存入只读存储区 不占用RAM
 static const uart_hw_info_t s_uart_hw_info[BSP_UART_MAX] = {
+    /* IM948: USART6 (PC6/PC7), DMA2_Stream1 / Channel5 */
     [BSP_UART_IMU1] = {
-        .uart_base = USART1,
-        .gpio_rcc = RCC_AHB1Periph_GPIOA,
-        .uart_rcc = RCC_APB2Periph_USART1,
-        .dma_rcc = RCC_AHB1Periph_DMA2,
-        .uart_rcc_cmd = RCC_APB2PeriphClockCmd,
-        .gpio_tx_port = GPIOA,
-        .gpio_pin_tx = GPIO_Pin_9,
-        .gpio_pin_tx_src = GPIO_PinSource9,
-        .gpio_rx_port = GPIOA,
-        .gpio_pin_rx = GPIO_Pin_10,
-        .gpio_pin_rx_src = GPIO_PinSource10,
-        .gpio_af = GPIO_AF_USART1,
-        .irqn = 0,  // 零中断架构 不需要NVIC配置
-        .nvic_priority = 0,
-        .dma_rx_stream = DMA2_Stream5,
-        .dma_tx_stream = NULL,
-        .dma_channel = DMA_Channel_4,
-        .dma_priority = DMA_Priority_High,
-        .dma_rx_clear_flags = DMA_FLAG_TCIF5 | DMA_FLAG_HTIF5 | DMA_FLAG_TEIF5 | DMA_FLAG_DMEIF5 | DMA_FLAG_FEIF5,
-        .dma_tx_clear_flags = 0,
-        .dma_tx_it_tc = 0,
-        .dma_tx_it_te = 0,
-        .dma_tx_it_dme = 0,
-        .dma_tx_it_fe = 0,
-        .dma_tx_irqn = 0,
-        .dma_tx_nvic_priority = 0
-    },
-
-    [BSP_UART_IMU2] = {
-        .uart_base = USART2,
-        .gpio_rcc = RCC_AHB1Periph_GPIOA,
-        .uart_rcc = RCC_APB1Periph_USART2,
-        .dma_rcc = RCC_AHB1Periph_DMA1,
-        .uart_rcc_cmd = RCC_APB1PeriphClockCmd,
-        .gpio_tx_port = GPIOA,
-        .gpio_pin_tx = GPIO_Pin_2,
-        .gpio_pin_tx_src = GPIO_PinSource2,
-        .gpio_rx_port = GPIOA,
-        .gpio_pin_rx = GPIO_Pin_3,
-        .gpio_pin_rx_src = GPIO_PinSource3,
-        .gpio_af = GPIO_AF_USART2,
-        .irqn = 0,
-        .nvic_priority = 0,
-        .dma_rx_stream = DMA1_Stream5,
-        .dma_tx_stream = NULL,
-        .dma_channel = DMA_Channel_4,
-        .dma_priority = DMA_Priority_High,
-        .dma_rx_clear_flags = DMA_FLAG_TCIF5 | DMA_FLAG_HTIF5 | DMA_FLAG_TEIF5 | DMA_FLAG_DMEIF5 | DMA_FLAG_FEIF5,
-        .dma_tx_clear_flags = 0,
-        .dma_tx_it_tc = 0,
-        .dma_tx_it_te = 0,
-        .dma_tx_it_dme = 0,
-        .dma_tx_it_fe = 0,
-        .dma_tx_irqn = 0,
-        .dma_tx_nvic_priority = 0
-    },
-
-    [BSP_UART_IMU3] = {
         .uart_base = USART6,
         .gpio_rcc = RCC_AHB1Periph_GPIOC,
         .uart_rcc = RCC_APB2Periph_USART6,
@@ -140,6 +83,37 @@ static const uart_hw_info_t s_uart_hw_info[BSP_UART_MAX] = {
         .dma_channel = DMA_Channel_5,
         .dma_priority = DMA_Priority_High,
         .dma_rx_clear_flags = DMA_FLAG_TCIF1 | DMA_FLAG_HTIF1 | DMA_FLAG_TEIF1 | DMA_FLAG_DMEIF1 | DMA_FLAG_FEIF1,
+        .dma_tx_clear_flags = 0,
+        .dma_tx_it_tc = 0,
+        .dma_tx_it_te = 0,
+        .dma_tx_it_dme = 0,
+        .dma_tx_it_fe = 0,
+        .dma_tx_irqn = 0,
+        .dma_tx_nvic_priority = 0
+    },
+
+    /* JY901: USART1 (PA9/PA10), DMA2_Stream5 / Channel4
+     * 注意: 不可改用 DMA2_Stream2，该流已被 WS2812 LED_2 占用 */
+    [BSP_UART_IMU2] = {
+        .uart_base = USART1,
+        .gpio_rcc = RCC_AHB1Periph_GPIOA,
+        .uart_rcc = RCC_APB2Periph_USART1,
+        .dma_rcc = RCC_AHB1Periph_DMA2,
+        .uart_rcc_cmd = RCC_APB2PeriphClockCmd,
+        .gpio_tx_port = GPIOA,
+        .gpio_pin_tx = GPIO_Pin_9,
+        .gpio_pin_tx_src = GPIO_PinSource9,
+        .gpio_rx_port = GPIOA,
+        .gpio_pin_rx = GPIO_Pin_10,
+        .gpio_pin_rx_src = GPIO_PinSource10,
+        .gpio_af = GPIO_AF_USART1,
+        .irqn = 0,  // 零中断架构 不需要NVIC配置
+        .nvic_priority = 0,
+        .dma_rx_stream = DMA2_Stream5,
+        .dma_tx_stream = NULL,
+        .dma_channel = DMA_Channel_4,
+        .dma_priority = DMA_Priority_High,
+        .dma_rx_clear_flags = DMA_FLAG_TCIF5 | DMA_FLAG_HTIF5 | DMA_FLAG_TEIF5 | DMA_FLAG_DMEIF5 | DMA_FLAG_FEIF5,
         .dma_tx_clear_flags = 0,
         .dma_tx_it_tc = 0,
         .dma_tx_it_te = 0,
@@ -207,20 +181,21 @@ static const uart_hw_info_t s_uart_hw_info[BSP_UART_MAX] = {
         .dma_tx_nvic_priority = 7
     },
 
+    /* Shell/Log 调试口: USART2 (PA2/PA3)，RXNE 中断接收，不使用 DMA */
     [BSP_UART_DEBUG] = {
-        .uart_base = UART5,
-        .gpio_rcc = RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD,
-        .uart_rcc = RCC_APB1Periph_UART5,
+        .uart_base = USART2,
+        .gpio_rcc = RCC_AHB1Periph_GPIOA,
+        .uart_rcc = RCC_APB1Periph_USART2,
         .dma_rcc = 0,
         .uart_rcc_cmd = RCC_APB1PeriphClockCmd,
-        .gpio_tx_port = GPIOC,
-        .gpio_pin_tx = GPIO_Pin_12,
-        .gpio_pin_tx_src = GPIO_PinSource12,
-        .gpio_rx_port = GPIOD,
-        .gpio_pin_rx = GPIO_Pin_2,
-        .gpio_pin_rx_src = GPIO_PinSource2,
-        .gpio_af = GPIO_AF_UART5,
-        .irqn = UART5_IRQn,  // 需要串口接收中断
+        .gpio_tx_port = GPIOA,
+        .gpio_pin_tx = GPIO_Pin_2,
+        .gpio_pin_tx_src = GPIO_PinSource2,
+        .gpio_rx_port = GPIOA,
+        .gpio_pin_rx = GPIO_Pin_3,
+        .gpio_pin_rx_src = GPIO_PinSource3,
+        .gpio_af = GPIO_AF_USART2,
+        .irqn = USART2_IRQn,  // 需要串口接收中断
         .nvic_priority = 7,
         .dma_rx_stream = NULL,
         .dma_tx_stream = NULL,
@@ -520,17 +495,14 @@ void bsp_uart_init_default(void)
 
     // 依次传入枚举 ID 和配置模板进行初始化
     
-    // 初始化 IMU1 (USART1)
+    // 初始化 IMU1 (USART6, IM948)
     bsp_uart_init(BSP_UART_IMU1, &default_config);
-    
-    // 初始化 IMU2 (USART2)
+
+    // 初始化 IMU2 (USART1, JY901)
     bsp_uart_init(BSP_UART_IMU2, &default_config);
 
-    // Initialize IMU3 (USART6)
-    bsp_uart_init(BSP_UART_IMU3, &default_config);
-
     default_config.baudrate  = 1500000;
-    // 初始化 shell/log 调试接口（UART5）
+    // 初始化 shell/log 调试接口（USART2）
     bsp_uart_init(BSP_UART_DEBUG, &default_config);
     
     default_config.baudrate  = 921600;

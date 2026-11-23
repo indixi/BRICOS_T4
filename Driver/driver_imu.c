@@ -22,7 +22,6 @@ typedef struct {
 
 static imu_dev_t s_devs[IMU_MAX_NUM] = {0};
 static im948_ctx_t s_im948_ctx_1 = {0};
-static im948_ctx_t s_im948_ctx_2 = {0};
 
 /* ===================================================================
  * 各个 IMU 专属的解析逻辑 (未来添加新 IMU 就在这里加)
@@ -147,13 +146,8 @@ static bool Parse_JY901S(imu_dev_t *dev, imu_data_t *out_data)
 
 static void IM948_Hardware_Tx(uint8_t *pBuf, uint16_t len)
 {
-    // 调用 BSP 层的接口，把数据实打实地从外设串口 2 发出去
+    // 调用 BSP 层的接口，把数据从 IMU1 (USART6) 发出去
     bsp_uart_send_buffer(BSP_UART_IMU1, pBuf, len);
-}
-
-static void IM948_2_Hardware_Tx(uint8_t *pBuf, uint16_t len)
-{
-    bsp_uart_send_buffer(BSP_UART_IMU3, pBuf, len);
 }
 
 static void Init_IM948(void)
@@ -176,22 +170,6 @@ static void Init_IM948(void)
 
 // --- 专属解析器 2：IM948 (变长状态机) ---
 // 你的 Cmd_GetPkt 状态机内部逻辑可以放这里面，或者调用外部函数
-
-static void Init_IM948_2(void)
-{
-    IM948_ContextInit(&s_im948_ctx_2, IM948_2_Hardware_Tx);
-
-    bsp_delay_ms(200);
-
-    IM948_CtxCmd_03(&s_im948_ctx_2);
-    IM948_CtxCmd_12(&s_im948_ctx_2, 5, 255, 0, 0, 3, 25, 2, 4, 9, 0x35);
-    IM948_CtxCmd_19(&s_im948_ctx_2);
-    bsp_delay_ms(100);
-    IM948_CtxCmd_40(&s_im948_ctx_2, 2);
-    bsp_uart_start_dma_rx_circular(BSP_UART_IMU3,
-                                   Driver_IMU_GetRxBuf(IMU_IM948_2),
-                                   Driver_IMU_GetBufSize(IMU_IM948_2));
-}
 
 static bool Parse_IM948(im948_ctx_t *ctx, imu_dev_t *dev, imu_data_t *out_data)
 {
@@ -248,7 +226,6 @@ void Driver_IMU_Init(void)
 {
     Init_JY901S();
     Init_IM948();
-    Init_IM948_2();
 }
 
 bool Driver_IMU_JY901S_CalibrateAcc(void)
@@ -336,7 +313,6 @@ bool Driver_IMU_Process(imu_id_t id, imu_data_t *out_data) {
     switch (id) {
         case IMU_JY901S: return Parse_JY901S(&s_devs[id], out_data);
         case IMU_IM948:  return Parse_IM948(&s_im948_ctx_1, &s_devs[id], out_data);
-        case IMU_IM948_2: return Parse_IM948(&s_im948_ctx_2, &s_devs[id], out_data);
         default:         return false;
     }
 }

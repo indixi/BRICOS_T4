@@ -30,21 +30,21 @@ typedef struct {
 } adc_core_info_t;
 
 static const adc_hw_info_t s_adc_hw_info[BSP_ADC_MAX] = {
-    [BSP_ADC_CURRENT] = {
-        .adc = ADC3,
-        .gpio_port = GPIOF,
-        .gpio_rcc = RCC_AHB1Periph_GPIOF,
-        .gpio_pin = GPIO_Pin_9,
-        .adc_channel = ADC_Channel_7,
+    [BSP_ADC_CURRENT] = {   // ISUM_ADC: PC5 / ADC1_IN15
+        .adc = ADC1,
+        .gpio_port = GPIOC,
+        .gpio_rcc = RCC_AHB1Periph_GPIOC,
+        .gpio_pin = GPIO_Pin_5,
+        .adc_channel = ADC_Channel_15,
         .needs_gpio = 1,
         .need_temp = 0
     },
-    [BSP_ADC_VOLTAGE] = {
-        .adc = ADC3,
-        .gpio_port = GPIOF,
-        .gpio_rcc = RCC_AHB1Periph_GPIOF,
-        .gpio_pin = GPIO_Pin_10,
-        .adc_channel = ADC_Channel_8,
+    [BSP_ADC_VOLTAGE] = {   // VBAT_ADC: PC4 / ADC1_IN14
+        .adc = ADC1,
+        .gpio_port = GPIOC,
+        .gpio_rcc = RCC_AHB1Periph_GPIOC,
+        .gpio_pin = GPIO_Pin_4,
+        .adc_channel = ADC_Channel_14,
         .needs_gpio = 1,
         .need_temp = 0
     },
@@ -70,6 +70,12 @@ static const bsp_adc_config_t s_adc_default_cfg = {
     .dma_enable = true
 };
 
+/* 通道 -> DMA 缓冲区槽位映射 (NULL 表示该通道未在 DMA 扫描组中) */
+static volatile uint16_t *s_adc_dma_slot[BSP_ADC_MAX] = {0};
+
+/* 系统默认 ADC 采集组 (ADC1 扫描 + DMA) 的 DMA 缓冲区 */
+static volatile uint16_t s_adc_default_buf[BSP_ADC_MAX];
+
 /* ==========================================
  * ADC 与 DMA 底层初始化
  * ========================================== */
@@ -91,9 +97,9 @@ static uint32_t bsp_adc_map_sample_time(bsp_adc_sample_t t)
 bool bsp_adc_init(bsp_adc_ch_t *ch_list, uint8_t ch_num, uint16_t *val_array, const bsp_adc_config_t *cfg)
 {
     if (ch_list == NULL || ch_num == 0 || ch_num > BSP_ADC_MAX) return false;
-    if (cfg->dma_enable && val_array == NULL) return false;
 
     const bsp_adc_config_t *use_cfg = (cfg != NULL) ? cfg : &s_adc_default_cfg;
+    if (use_cfg->dma_enable && val_array == NULL) return false;
 
     const adc_hw_info_t *hw0 = &s_adc_hw_info[ch_list[0]];
     ADC_TypeDef *adc = hw0->adc;
@@ -121,8 +127,21 @@ bool bsp_adc_init(bsp_adc_ch_t *ch_list, uint8_t ch_num, uint16_t *val_array, co
         RCC_AHB1PeriphClockCmd(core->dma_rcc, ENABLE);
     }
 
-    if(hw0->need_temp)  ADC_TempSensorVrefintCmd(ENABLE);
+    // 任意通道需要内部温度传感器即使能 (不依赖通道在 ch_list 中的位置)
+    for (uint8_t i = 0; i < ch_num; i++) {
+        if (s_adc_hw_info[ch_list[i]].need_temp) {
+            ADC_TempSensorVrefintCmd(ENABLE);
+            break;
+        }
+    }
     bsp_delay_us(10);
+
+    // 清除该 ADC 下所有通道的旧 DMA 槽位映射，避免重复初始化后残留
+    for (uint8_t ch = 0; ch < BSP_ADC_MAX; ch++) {
+        if (s_adc_hw_info[ch].adc == adc) {
+            s_adc_dma_slot[ch] = NULL;
+        }
+    }
 
 
 
@@ -164,6 +183,11 @@ bool bsp_adc_init(bsp_adc_ch_t *ch_list, uint8_t ch_num, uint16_t *val_array, co
 
         DMA_Init(core->dma_stream, &DMA_InitStructure);
         DMA_Cmd(core->dma_stream, ENABLE);
+
+        // 记录每个通道在 DMA 缓冲区中的槽位 (顺序与 ch_list 一致)
+        for (uint8_t i = 0; i < ch_num; i++) {
+            s_adc_dma_slot[ch_list[i]] = &val_array[i];
+        }
     }
 
     // ADC init
@@ -195,10 +219,40 @@ bool bsp_adc_init(bsp_adc_ch_t *ch_list, uint8_t ch_num, uint16_t *val_array, co
     return true;
 }
 
+/**
+ * @brief  初始化系统默认 ADC 采集组
+ * @note   ADC1 连续扫描 + DMA 循环搬运，顺序: 电池电压 / 系统电流 / 芯片温度
+ *         温度传感器要求采样时间 >= 10us，ADCCLK = 84MHz / 4 = 21MHz，
+ *         仅 480 周期 (约 22.9us) 满足，扫描组统一使用该采样时间 (一轮约 70us)
+ */
+bool bsp_adc_init_default(void)
+{
+    bsp_adc_ch_t ch_list[] = {
+        BSP_ADC_VOLTAGE,
+        BSP_ADC_CURRENT,
+        BSP_ADC_CHIPTEMP
+    };
+
+    const bsp_adc_config_t cfg = {
+        .sample_time = BSP_ADC_SAMPLE_480CYC,
+        .scan_enable = true,
+        .continuous_enable = true,
+        .dma_enable = true
+    };
+
+    return bsp_adc_init(ch_list, (uint8_t)(sizeof(ch_list) / sizeof(ch_list[0])),
+                        (uint16_t *)s_adc_default_buf, &cfg);
+}
+
 uint16_t bsp_adc_read_raw(bsp_adc_ch_t ch)
 {
     if (ch >= BSP_ADC_MAX) {
         return 0;
+    }
+
+    // 通道在 DMA 扫描组中: DR/EOC 已被 DMA 占用，直接返回 DMA 缓冲区中的最新值
+    if (s_adc_dma_slot[ch] != NULL) {
+        return *s_adc_dma_slot[ch];
     }
 
     const adc_hw_info_t *hw = &s_adc_hw_info[ch];

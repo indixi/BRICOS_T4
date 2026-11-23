@@ -169,7 +169,7 @@ void DMA2_Stream2_IRQHandler(void)
     bsp_pwm_dma_waveform_irq_handler(BSP_PWM_LED_2);
 }
 
-void UART5_IRQHandler(void)
+void USART2_IRQHandler(void)
 {
     bsp_uart_isr_handler(BSP_UART_DEBUG);
 }

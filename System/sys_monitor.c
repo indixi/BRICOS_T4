@@ -37,16 +37,8 @@ bool System_Runtime_Monitor_Init(void)
     if (!res)  return false;
     sys_monitor_timer_cfg = timer_cfg; // 保存配置以供后续读取计数时使用
 
-    // 初始化ADC硬件
-    bsp_adc_ch_t adc_ch_list[] = { BSP_ADC_CHIPTEMP };
-    const bsp_adc_config_t adc_cfg = {
-        .sample_time = BSP_ADC_SAMPLE_480CYC,
-        .scan_enable = false,
-        .continuous_enable = false,
-        .dma_enable = false
-    };
-    res = bsp_adc_init(adc_ch_list, 1, NULL, &adc_cfg);
-    if (!res)  return false;
+    // 芯片温度 ADC 已由 bsp_adc_init_default() 纳入 ADC1 扫描 + DMA 采集组，
+    // 此处不再单独初始化 ADC，否则会覆盖扫描配置
 
     return res;
 }

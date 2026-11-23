@@ -3,6 +3,7 @@
 
 #include "stm32f4xx_rcc.h"
 
+#include "bsp_adc.h"
 #include "bsp_delay.h"
 #include "bsp_gpio.h"
 #include "bsp_pwm.h"
@@ -115,6 +116,12 @@ int main(void)
     bsp_pwm_init(0);
     Main_EarlyPrint("[BOOT] PWM ready\r\n");
 
+    if (bsp_adc_init_default()) {
+        Main_EarlyPrint("[BOOT] ADC ready\r\n");
+    } else {
+        Main_EarlyPrint("[BOOT] ADC failed\r\n");
+    }
+
     Driver_PSWITCH_Init();
     Main_EarlyPrint("[BOOT] PSWITCH ready\r\n");
 
@@ -136,7 +143,6 @@ int main(void)
         Main_EarlyPrint("[BOOT] MS5837 failed\r\n");
     }
 
-    Driver_DHT11_Init();
     if (Driver_Power_Init()) {
         Main_EarlyPrint("[BOOT] Power done\r\n");
     } else {

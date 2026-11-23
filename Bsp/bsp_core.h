@@ -11,12 +11,11 @@
 
 /* --- 串口端口枚举 --- */
 typedef enum {
-    BSP_UART_IMU1 = 0,  // USART1: IMU1 data receive, IM948
-    BSP_UART_IMU2,      // USART2: IMU2 data receive, JY901
-    BSP_UART_IMU3,      // USART6: IMU3 data receive, IM948_2
+    BSP_UART_IMU1 = 0,  // USART6: IMU1 data receive, IM948
+    BSP_UART_IMU2,      // USART1: IMU2 data receive, JY901
     BSP_UART_OPI_RT,    // USART3: realtime communication
     BSP_UART_OPI_NRT,   // UART4: non-realtime communication
-    BSP_UART_DEBUG,     // UART5: Shell/Log debug port
+    BSP_UART_DEBUG,     // USART2: Shell/Log debug port
     BSP_UART_MAX
 } bsp_uart_port_t;
 

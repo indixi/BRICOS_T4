@@ -32,6 +32,20 @@ typedef struct {
  */
 bool bsp_adc_init(bsp_adc_ch_t *ch_list, uint8_t ch_num, uint16_t *val_array, const bsp_adc_config_t *cfg);
 
+/**
+ * @brief  初始化系统默认 ADC 采集组
+ * @note   ADC1 连续扫描 + DMA 循环搬运: 电池电压(PC4) / 系统电流(PC5) / 芯片温度
+ *         统一采样时间 480 周期 (温度传感器要求 >= 10us)
+ *         需要在 main 函数的硬件初始化阶段被调用
+ * @return true:成功 false:失败
+ */
+bool bsp_adc_init_default(void);
+
+/**
+ * @brief  读取指定通道的 ADC 原始值
+ * @note   若该通道已在 DMA 扫描组中，直接返回 DMA 缓冲区中的最新值；
+ *         否则执行一次软件触发的单次转换
+ */
 uint16_t bsp_adc_read_raw(bsp_adc_ch_t ch);
 
 #endif /* _BSP_ADC_H_ */

@@ -5,7 +5,7 @@
 
 /*
  * Shell transport adapter.
- * Current implementation uses UART5 (BSP_UART_DEBUG) character stream.
+ * Current implementation uses USART2 (BSP_UART_DEBUG) character stream.
  */
 const shell_transport_vtable_t *Task_ShellTransportNRT_GetVTable(void);
 

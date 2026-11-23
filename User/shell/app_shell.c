@@ -5,7 +5,7 @@
 #include "task_shell_transport_nrt.h"
 
 /*
- * Shell transport is bound to UART5 (BSP_UART_DEBUG).
+ * Shell transport is bound to USART2 (BSP_UART_DEBUG).
  * Keep transport selection in this file to avoid touching main.c.
  */
 void App_Shell_Init(void)
@@ -21,6 +21,6 @@ void App_Shell_Init(void)
     if (shell_ret != 0) {
         LOG_ERROR("ShellCore start failed: %d", shell_ret);
     } else {
-        LOG_INFO("ShellCore started on UART5 debug transport");
+        LOG_INFO("ShellCore started on USART2 debug transport");
     }
 }

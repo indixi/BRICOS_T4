@@ -18,10 +18,10 @@ static const gpio_hw_info_t s_gpio_hw_info[BSP_GPIO_MAX] = {
         .pin = GPIO_Pin_3,
         .rcc = RCC_AHB1Periph_GPIOC
     },
-    [BSP_GPIO_PSWITCH] = {
-        .port= GPIOC,
-        .pin = GPIO_Pin_1,
-        .rcc = RCC_AHB1Periph_GPIOC
+    [BSP_GPIO_PSWITCH] = {   // SW_CTRL
+        .port= GPIOA,
+        .pin = GPIO_Pin_5,
+        .rcc = RCC_AHB1Periph_GPIOA
     },
     [BSP_GPIO_USERLED] = {
         .port= GPIOE,

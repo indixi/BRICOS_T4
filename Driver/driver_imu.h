@@ -7,7 +7,6 @@
 typedef enum {
     IMU_JY901S = 0,
     IMU_IM948,
-    IMU_IM948_2,
     IMU_MAX_NUM
 } imu_id_t;
 
