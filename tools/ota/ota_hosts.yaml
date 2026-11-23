@@ -14,3 +14,27 @@ hosts:
     data_port: /dev/bot_ota_dataport
     reset_gpiochip: /dev/gpiochip4
     reset_line: 9
+
+  bricsbot3:
+    host: 192.168.13.13
+    remote_python: ~/miniconda3/envs/test/bin/python
+    cmd_port: /dev/bot_ota_cmdport
+    data_port: /dev/bot_ota_dataport
+    reset_gpiochip: /dev/gpiochip0
+    reset_line: 106
+
+  bricsbot4:
+    host: 192.168.13.14
+    remote_python: ~/miniconda3/envs/test/bin/python
+    cmd_port: /dev/bot_ota_cmdport
+    data_port: /dev/bot_ota_dataport
+    reset_gpiochip: /dev/gpiochip0
+    reset_line: 106
+
+  bricsbot5:
+    host: 192.168.13.15
+    remote_python: ~/miniconda3/envs/test/bin/python
+    cmd_port: /dev/bot_ota_cmdport
+    data_port: /dev/bot_ota_dataport
+    reset_gpiochip: /dev/gpiochip0
+    reset_line: 106
